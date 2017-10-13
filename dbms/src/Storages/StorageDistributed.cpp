@@ -404,24 +404,6 @@ void StorageDistributed::reshardPartitions(
 }
 
 
-BlockInputStreams StorageDistributed::describe(const Context & context, const Settings & settings)
-{
-    /// Create DESCRIBE TABLE query.
-    auto cluster = getCluster();
-
-    ASTPtr describe_query_ptr = std::make_shared<ASTDescribeQuery>();
-    auto & describe_query = static_cast<ASTDescribeQuery &>(*describe_query_ptr);
-
-    describe_query.database = remote_database;
-    describe_query.table = remote_table;
-
-    ClusterProxy::DescribeStreamFactory describe_stream_factory;
-
-    return ClusterProxy::executeQuery(
-            describe_stream_factory, cluster, describe_query_ptr, context, settings);
-}
-
-
 NameAndTypePair StorageDistributed::getColumn(const String & column_name) const
 {
     if (const auto & type = VirtualColumnFactory::tryGetType(column_name))
