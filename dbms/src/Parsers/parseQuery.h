@@ -33,6 +33,12 @@ ASTPtr parseQuery(
     const std::string & description);
 
 
+ASTPtr parseQuery(
+    IParser & parser,
+    const std::string & query,
+    const std::string & query_description);
+
+
 /** Split queries separated by ; on to list of single queries
   * Returns pointer to the end of last sucessfuly parsed query (first), and true if all queries are sucessfuly parsed (second)
   * NOTE: INSERT's data should be placed in single line.

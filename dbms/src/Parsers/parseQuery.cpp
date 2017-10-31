@@ -317,6 +317,15 @@ ASTPtr parseQuery(
 }
 
 
+ASTPtr parseQuery(
+    IParser & parser,
+    const std::string & query,
+    const std::string & query_description)
+{
+    return parseQuery(parser, query.data(), query.data() + query.size(), query_description);
+}
+
+
 std::pair<const char *, bool> splitMultipartQuery(const std::string & queries, std::vector<std::string> & queries_list)
 {
     ASTPtr ast;
