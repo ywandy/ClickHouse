@@ -22,7 +22,7 @@ AggregateFunctionPtr createAggregateFunctionWindowFunnel(const std::string & nam
 
 void registerAggregateFunctionWindowFunnel(AggregateFunctionFactory & factory)
 {
-    factory.registerFunction("funnelWindow", createAggregateFunctionWindowFunnel, AggregateFunctionFactory::CaseInsensitive);
+    factory.registerFunction("windowFunnel", createAggregateFunctionWindowFunnel, AggregateFunctionFactory::CaseInsensitive);
 }
 
 }
