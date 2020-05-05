@@ -56,6 +56,11 @@ ASTPtr ASTAlterCommand::clone() const
         res->values = values->clone();
         res->children.push_back(res->values);
     }
+    if (replica)
+    {
+        res->replica = replica->clone();
+        res->children.push_back(res->replica);
+    }
 
     return res;
 }
@@ -279,6 +284,10 @@ void ASTAlterCommand::formatImpl(
     else if (type == ASTAlterCommand::LIVE_VIEW_REFRESH)
     {
         settings.ostr << (settings.hilite ? hilite_keyword : "") << indent_str << "REFRESH " << (settings.hilite ? hilite_none : "");
+    }
+    else if (type == ASTAlterCommand::DROP_REPLICA)
+    {
+        settings.ostr << (settings.hilite ? hilite_keyword : "") << indent_str << "DROP " << (settings.hilite ? hilite_none : "") << " " << std::quoted(replica_name, '\'');
     }
     else
         throw Exception("Unexpected type of ALTER", ErrorCodes::UNEXPECTED_AST_STRUCTURE);

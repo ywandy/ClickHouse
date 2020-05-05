@@ -57,6 +57,8 @@ public:
         NO_TYPE,
 
         LIVE_VIEW_REFRESH,
+        
+        DROP_REPLICA,
     };
 
     Type type = NO_TYPE;
@@ -99,6 +101,9 @@ public:
      *  The value or ID of the partition is stored here.
      */
     ASTPtr partition;
+
+    // FOR DROP REPLICA queries
+    ASTPtr replica;
 
     /// For DELETE/UPDATE WHERE: the predicate that filters the rows to delete/update.
     ASTPtr predicate;
@@ -154,6 +159,9 @@ public:
     /// MOVE PARTITION partition TO TABLE db.table
     String to_database;
     String to_table;
+
+    /// DROP REPLICA
+    String replica_name;
 
     String getID(char delim) const override { return "AlterCommand" + (delim + std::to_string(static_cast<int>(type))); }
 
