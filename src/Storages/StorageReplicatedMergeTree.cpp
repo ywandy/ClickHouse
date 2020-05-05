@@ -584,6 +584,33 @@ void StorageReplicatedMergeTree::createReplica()
 }
 
 
+void StorageReplicatedMergeTree::removeReplica(const String & replica)
+{
+    auto zookeeper = tryGetZooKeeper();
+    if (zookeeper->expired())
+        throw Exception("Table was not dropped because ZooKeeper session has expired.", ErrorCodes::TABLE_WAS_NOT_DROPPED);
+
+    auto to_drop_path = zookeeper_path + "/replicas/" + replica;
+    LOG_INFO(log, "Removing replica " << to_drop_path);
+    /// It may left some garbage if to_drop_path subtree are concurently modified
+    zookeeper->tryRemoveRecursive(to_drop_path);
+    if (zookeeper->exists(to_drop_path))
+        LOG_ERROR(log, "Replica was not completely removed from ZooKeeper, "
+                    << to_drop_path << " still exists and may contain some garbage.");
+
+    /// Check that `zookeeper_path` exists: it could have been deleted by another replica after execution of previous line.
+    Strings replicas;
+    if (zookeeper->tryGetChildren(zookeeper_path + "/replicas", replicas) == Coordination::ZOK && replicas.empty())
+    {
+        LOG_INFO(log, "Removing table " << zookeeper_path << " (this might take several minutes)");
+        zookeeper->tryRemoveRecursive(zookeeper_path);
+        if (zookeeper->exists(zookeeper_path))
+            LOG_ERROR(log, "Table was not completely removed from ZooKeeper, "
+                        << zookeeper_path << " still exists and may contain some garbage.");
+    }
+}
+
+
 void StorageReplicatedMergeTree::checkParts(bool skip_sanity_checks)
 {
     auto zookeeper = getZooKeeper();
@@ -3711,33 +3738,22 @@ void StorageReplicatedMergeTree::drop()
 
         if (is_readonly || !zookeeper)
             throw Exception("Can't drop readonly replicated table (need to drop data in ZooKeeper as well)", ErrorCodes::TABLE_IS_READ_ONLY);
-
-        shutdown();
-
-        if (zookeeper->expired())
-            throw Exception("Table was not dropped because ZooKeeper session has expired.", ErrorCodes::TABLE_WAS_NOT_DROPPED);
-
-        LOG_INFO(log, "Removing replica " << replica_path);
-        replica_is_active_node = nullptr;
-        /// It may left some garbage if replica_path subtree are concurently modified
-        zookeeper->tryRemoveRecursive(replica_path);
-        if (zookeeper->exists(replica_path))
-            LOG_ERROR(log, "Replica was not completely removed from ZooKeeper, "
-                      << replica_path << " still exists and may contain some garbage.");
-
-        /// Check that `zookeeper_path` exists: it could have been deleted by another replica after execution of previous line.
-        Strings replicas;
-        if (zookeeper->tryGetChildren(zookeeper_path + "/replicas", replicas) == Coordination::ZOK && replicas.empty())
-        {
-            LOG_INFO(log, "Removing table " << zookeeper_path << " (this might take several minutes)");
-            zookeeper->tryRemoveRecursive(zookeeper_path);
-            if (zookeeper->exists(zookeeper_path))
-                LOG_ERROR(log, "Table was not completely removed from ZooKeeper, "
-                          << zookeeper_path << " still exists and may contain some garbage.");
-        }
     }
+    shutdown();
+    replica_is_active_node = nullptr;
+    removeReplica(replica_name);
 
     dropAllData();
+}
+
+void StorageReplicatedMergeTree::dropReplica(TableStructureWriteLockHolder & holder, const String & replica)
+{
+    if (replica_name == replica)
+    {
+        drop(holder);
+        return;
+    }
+    removeReplica(replica);
 }
 
 
