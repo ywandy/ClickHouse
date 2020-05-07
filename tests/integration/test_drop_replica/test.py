@@ -42,12 +42,19 @@ def test_drop_replica(start_cluster):
     node_1_2.kill_clickhouse()
 
     zk = cluster.get_kazoo_client('zoo1')
+    i = 0
+    while zk.exists("/clickhouse/tables/test/{shard}/replicated/replicas/{replica}/is_active".format(shard=1, replica='node_1_2')) and i < 5:
+        time.sleep(0.5)
+        i = i + 1
+
     node_1_1.query("ALTER TABLE test.test_table drop replica 'node_1_2'")
-    e2 = zk.exists("/clickhouse/tables/test/{shard}/replicated/replicas/{replica}".format(shard=1, replica='node_1_2'))
+    exists_replica_1_2 = zk.exists("/clickhouse/tables/test/{shard}/replicated/replicas/{replica}".format(shard=1, replica='node_1_2'))
 
-    assert(e2 == False)
+    assert (exists_replica_1_2 == False)
 
-    node_1_1.query("ALTER TABLE test.test_table drop replica 'node_1_1'")
+    assert "can't drop local replica" in node_1_1.query("ALTER TABLE test.test_table drop replica 'node_1_1'")
+
+    node_1_1.query("DROP TABLE test.test_table")
     exists_base_path = zk.exists("/clickhouse/tables/test/{shard}/replicated".format(shard=1))
 
     assert(exists_base_path == False)
