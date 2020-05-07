@@ -43,8 +43,8 @@ def test_drop_replica(start_cluster):
 
     zk = cluster.get_kazoo_client('zoo1')
     i = 0
-    while zk.exists("/clickhouse/tables/test/{shard}/replicated/replicas/{replica}/is_active".format(shard=1, replica='node_1_2')) and i < 5:
-        time.sleep(0.5)
+    while zk.exists("/clickhouse/tables/test/{shard}/replicated/replicas/{replica}/is_active".format(shard=1, replica='node_1_2')) and i <= 120:
+        time.sleep(2)
         i = i + 1
 
     node_1_1.query("ALTER TABLE test.test_table drop replica 'node_1_2'")
