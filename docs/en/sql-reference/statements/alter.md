@@ -205,7 +205,7 @@ Replicas can be dropped using following syntax:
 ALTER TABLE [db].name DROP REPLICA replica_name;
 ```
 
-Queries will remove the replica path in zookeeper, it's useful when you want to decrease your replica factor. It will only drop the inactive replica, and it can't drop local replica, please use `DROP TABLE`.
+Queries will remove the replica path in zookeeper, it's useful when you want to decrease your replica factor. It will only drop the inactive/stale replica, and it can't drop local replica, please use `DROP TABLE` for that.
 
 ### Manipulations with Partitions and Parts {#alter_manipulations-with-partitions}
 
