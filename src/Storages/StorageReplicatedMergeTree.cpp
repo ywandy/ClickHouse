@@ -3765,7 +3765,6 @@ void StorageReplicatedMergeTree::dropReplica(const String & replica)
     removeReplica(replica);
 }
 
-
 void StorageReplicatedMergeTree::rename(const String & new_path_to_table_data, const StorageID & new_table_id)
 {
     MergeTreeData::rename(new_path_to_table_data, new_table_id);

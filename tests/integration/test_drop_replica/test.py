@@ -46,6 +46,7 @@ def test_drop_replica(start_cluster):
 
     assert "can't drop local replica" in node_1_1.query_and_get_error("SYSTEM DROP REPLICA 'node_1_1' FROM test.test_table")
     assert "can't drop local replica" in node_1_2.query_and_get_error("SYSTEM DROP REPLICA 'node_1_2' FROM test.test_table")
+    assert "can't drop local replica" in node_1_3.query_and_get_error("SYSTEM DROP REPLICA 'node_1_3' FROM '/clickhouse/tables/test/{shard}/replicated'".format(shard=1))
     assert "it's active" in node_1_1.query_and_get_error("SYSTEM DROP REPLICA 'node_1_2' FROM test.test_table")
 
     with PartitionManager() as pm:
